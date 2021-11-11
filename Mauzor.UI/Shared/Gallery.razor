@@ -1,0 +1,97 @@
+﻿@using AV.Domain
+@using Mauzor.UI.Shared
+@using System.IO
+
+<div>
+    <select title="view mode" @bind="viewMode">
+        <option value="@GalleryViewMode.DetailList">Detail list</option>
+        <option value="@GalleryViewMode.SmallIcons">Small icons</option>
+        <option value="@GalleryViewMode.LargeIcons">Large icons</option>
+    </select>
+
+    <select title="media types" value="@mediaTypes" @onchange="@(e => { mediaTypes = Enum.Parse<MediaTypes>(e.Value as string ?? "Visible"); ReloadCurrent(); })">
+        <option value="@MediaTypes.Visible">Visual</option>
+        <option value="@MediaTypes.Image">Image</option>
+        <option value="@MediaTypes.Video">Video</option>
+    </select>
+
+    <label>
+        <input type="checkbox" value="@onlySecure" @onchange="e => { onlySecure = e.Value as bool? ?? false; ReloadCurrent(); }" />
+        <span>Only Secure?</span>
+    </label>
+</div>
+
+<div>
+    <input type="button" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
+</div>
+
+<div class="gallery @AuxClasses">
+    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation">
+        <ItemTemplate Context="item">
+            <GalleryItem ViewMode="@viewMode" Info="item" OnDoubleClick="ItemDoubleClicked" />
+        </ItemTemplate>
+    </ListView>
+</div>
+
+<div>
+    <input type="button" disabled="@(!HasSelection)" value="lol click" />
+    <input type="button" @onclick="ReloadCurrent" value="reload" />
+</div>
+
+@code {
+
+    private bool onlySecure;
+    private MediaTypes mediaTypes = MediaTypes.Visible;
+    private GalleryViewMode viewMode;
+
+    private DirectoryInfo currentDir = null!;
+    private List<FileSystemInfo> items = new List<FileSystemInfo>();
+    private ListView<FileSystemInfo> listControl = null!;
+
+    private bool HasSelection => listControl?.SelectedIndex != null;
+    private bool CanGoUp => currentDir.Parent != null;
+
+    private string AuxClasses => viewMode switch
+    {
+        GalleryViewMode.LargeIcons => "large",
+        GalleryViewMode.DetailList => "small detail",
+        _ => "small"
+    };
+
+    private ListOrientation orientation => viewMode switch
+    {
+        GalleryViewMode.DetailList => ListOrientation.Vertical,
+        _ => ListOrientation.Horizontal,
+    };
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navigate(new DirectoryInfo("C:\\temp"));
+    }
+
+    private void ReloadCurrent() => Navigate(currentDir);
+
+    private void Navigate(DirectoryInfo dir)
+    {
+        currentDir = dir;
+        listControl?.ClearSelection();
+        items.Clear();
+
+        var folderOptions = new EnumerationOptions { IgnoreInaccessible = true };
+        items.AddRange(dir.GetDirectories("*", folderOptions));
+        items.AddRange(dir.EnumerateMedia(mediaTypes, false).Where(m => (!onlySecure || m.IsSecure())));
+    }
+
+    private void ItemDoubleClicked(FileSystemInfo info)
+    {
+        if (info is FileInfo fi)
+        {
+            
+        }
+        else if (info is DirectoryInfo di)
+        {
+            Navigate(di);
+        }
+    }
+}

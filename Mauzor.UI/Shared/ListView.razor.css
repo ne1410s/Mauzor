@@ -1,0 +1,23 @@
+﻿.wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.wrapper.vertical > .list-item {
+  width: 100%;
+}
+
+.list-item {
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.list-item:hover {
+  background: rgb(229, 243, 255);
+}
+
+.list-item.selected {
+  background: rgb(204, 232, 255);
+  border-color: rgb(153, 209, 255);
+  cursor: default;
+}

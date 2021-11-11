@@ -1,0 +1,43 @@
+﻿@typeparam T
+
+<div class="wrapper @(Orientation.ToString().ToLower())">
+    @for (var i = 0; i < Items.Count; i++)
+    {
+        var itemIndex = i;
+        <div @onclick="() => Select(itemIndex)" class="list-item @(SelectedIndex == itemIndex ? "selected" : "")">
+            @ItemTemplate(Items[itemIndex])
+        </div>
+    }
+</div>
+
+
+@code {
+
+    [Parameter]
+    public List<T> Items { get; set; } = new();
+
+    [Parameter]
+    public RenderFragment<T> ItemTemplate { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<T?> SelectionChanged { get; set; }
+
+    [Parameter]
+    public ListOrientation Orientation { get; set; }
+
+    public T? SelectedItem { get; private set; }
+
+    public int? SelectedIndex { get; private set; }
+
+    public void ClearSelection() => Select(null);
+
+    private void Select(int? index)
+    {
+        if (index != SelectedIndex)
+        {
+            SelectedIndex = index;
+            SelectedItem = Items.ElementAtOrDefault(index ?? -1);
+            SelectionChanged.InvokeAsync(SelectedItem);
+        }
+    }
+}

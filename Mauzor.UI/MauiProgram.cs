@@ -4,7 +4,6 @@ using Microsoft.Maui;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.Controls.Compatibility;
 using Microsoft.Maui.Controls.Hosting;
-using Mauzor.UI.Data;
 
 namespace Mauzor.UI
 {
@@ -22,7 +21,8 @@ namespace Mauzor.UI
 				});
 
 			builder.Services.AddBlazorWebView();
-			builder.Services.AddSingleton<WeatherForecastService>();
+
+			// Inject dependencies
 
 			return builder.Build();
 		}

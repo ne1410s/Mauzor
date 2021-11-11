@@ -1,0 +1,74 @@
+﻿@using System.Text
+@using AV.Domain
+@using AV.Sources.Imaging
+@using System.IO
+@using static Mauzor.UI.Shared.Gallery
+
+<div class="@classes" @ondblclick="() => OnDoubleClick.InvokeAsync(Info)">
+    <div class="image" title="@ToolTip">
+        <img alt="file sys icon" src="@imageSource" />
+    </div>
+    <span class="name">@Info.Name</span>
+    @if (Info is FileInfo fi) 
+    {
+        <span class="is-detail type">@fi.Extension.TrimStart('.').ToLower()</span>
+        <span class="is-detail size">@fi.Length.ToFileSize()</span>
+    }
+</div>
+
+
+@code {
+    private string classes = null!;
+    private string imageSource = null!;
+    private FileSystemInfo info = null!;
+    private string? ToolTip => ViewMode switch
+    {
+        GalleryViewMode.SmallIcons => Info.Name,
+        GalleryViewMode.LargeIcons => (Info as FileInfo)?.Length.ToFileSize(),
+        _ => null,
+    };
+
+    [Parameter]
+    public GalleryViewMode ViewMode { get; set; }
+
+    [Parameter]
+    public FileSystemInfo Info
+    {
+        get => info;
+        set
+        {
+            if (info != value)
+            {
+                info = value;
+                var classBuilder = new StringBuilder("gallery-item");
+                if (info is FileInfo file)
+                {
+                    classBuilder.Append(" file");
+                    if (file.IsSecure())
+                    {
+                        classBuilder.Append(" secure");
+                    }
+
+                    imageSource = file.GetMediaType() switch
+                    {
+                        MediaTypes.Image => file.TransformBase64(testKey, 190) ?? "images/image.svg",
+                        MediaTypes.Video => "images/video.svg",
+                        _ => "images/document.svg"
+                    };
+                }
+                else if (info is DirectoryInfo di)
+                {
+                    classBuilder.Append(" folder");
+                    imageSource = "images/folder.svg";
+                }
+
+                classes = classBuilder.ToString();
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<FileSystemInfo> OnDoubleClick { get; set; }
+
+    private byte[] testKey = new byte[] { 1, 2, 3 };
+}
