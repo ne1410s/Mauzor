@@ -26,7 +26,7 @@
 </div>
 
 <div class="gallery @AuxClasses">
-    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation">
+    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation" SelectionChanged="OnSelectionChanged">
         <ItemTemplate Context="item">
             <GalleryItem ViewMode="@viewMode" Info="item" OnDoubleClick="ItemDoubleClicked" />
         </ItemTemplate>
@@ -34,21 +34,23 @@
 </div>
 
 <div>
-    <input type="button" disabled="@(!HasSelection)" value="lol click" />
+    <input type="button" disabled="@(selectedItem == null)" value="lol click" />
     <input type="button" @onclick="ReloadCurrent" value="reload" />
 </div>
+
+<FilePreview Info="selectedItem"/>
 
 @code {
 
     private bool onlySecure;
     private MediaTypes mediaTypes = MediaTypes.Visible;
-    private GalleryViewMode viewMode;
+    private GalleryViewMode viewMode = GalleryViewMode.LargeIcons;
 
     private DirectoryInfo currentDir = null!;
     private List<FileSystemInfo> items = new List<FileSystemInfo>();
     private ListView<FileSystemInfo> listControl = null!;
+    private FileSystemInfo? selectedItem;
 
-    private bool HasSelection => listControl?.SelectedIndex != null;
     private bool CanGoUp => currentDir.Parent != null;
 
     private string AuxClasses => viewMode switch
@@ -71,6 +73,11 @@
     }
 
     private void ReloadCurrent() => Navigate(currentDir);
+
+    private void OnSelectionChanged(FileSystemInfo? item)
+    {
+        selectedItem = item;
+    }
 
     private void Navigate(DirectoryInfo dir)
     {
