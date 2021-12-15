@@ -14,6 +14,11 @@ namespace Mauzor.UI
 		{
 		}
 
-		protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+		protected override MauiApp CreateMauiApp()
+		{
+			Microsoft.Maui.Essentials.Platform.Init(this);
+
+			return MauiProgram.CreateMauiApp();
+		}
 	}
 }
