@@ -1,8 +1,6 @@
-﻿@using System.Text
-@using FullStack.Av.Domain
+﻿@using FullStack.Av.Domain
 @using FullStack.Av.Sources.Imaging
 @using System.IO
-@using static Mauzor.UI.Shared.Gallery
 
 <div class="@classes" @ondblclick="() => OnDoubleClick.InvokeAsync(Info)">
     <div class="image" title="@ToolTip">
@@ -40,7 +38,7 @@
             if (info != value)
             {
                 info = value;
-                var classBuilder = new StringBuilder("gallery-item");
+                var classBuilder = new System.Text.StringBuilder("gallery-item");
                 if (info is FileInfo file)
                 {
                     classBuilder.Append(" file");

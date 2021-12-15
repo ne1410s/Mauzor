@@ -1,10 +1,10 @@
 ﻿@using System.IO
 
-@if (Info != null) {
-    <h3>@Info.FullName</h3>
+@if (File != null) {
+    <span>@File.FullName</span>
 }
 
 @code {
     [Parameter]
-    public FileSystemInfo? Info { get; set; }
+    public FileInfo? File { get; set; }
 }

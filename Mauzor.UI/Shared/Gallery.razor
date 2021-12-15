@@ -1,6 +1,10 @@
 ﻿@using FullStack.Av.Domain
 @using Mauzor.UI.Shared
 @using System.IO
+@using System.Diagnostics
+@using Microsoft.Extensions.Logging
+
+@inject ILogger<Gallery> logger;
 
 <div>
     <select title="view mode" @bind="viewMode">
@@ -8,21 +12,12 @@
         <option value="@GalleryViewMode.SmallIcons">Small icons</option>
         <option value="@GalleryViewMode.LargeIcons">Large icons</option>
     </select>
-
-    <select title="media types" value="@mediaTypes" @onchange="@(e => { mediaTypes = Enum.Parse<MediaTypes>(e.Value as string ?? "Visible"); ReloadCurrent(); })">
-        <option value="@MediaTypes.Visible">Visual</option>
-        <option value="@MediaTypes.Image">Image</option>
-        <option value="@MediaTypes.Video">Video</option>
-    </select>
-
-    <label>
-        <input type="checkbox" value="@onlySecure" @onchange="e => { onlySecure = e.Value as bool? ?? false; ReloadCurrent(); }" />
-        <span>Only Secure?</span>
-    </label>
 </div>
 
 <div>
-    <input type="button" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
+    <input type="button" title="up" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
+    <input type="button" title="refresh" @onclick="ReloadCurrent" value="↻" />
+    <span>@currentDir.FullName</span>
 </div>
 
 <div class="gallery @AuxClasses">
@@ -34,22 +29,19 @@
 </div>
 
 <div>
-    <input type="button" disabled="@(selectedItem == null)" value="lol click" />
-    <input type="button" @onclick="ReloadCurrent" value="reload" />
+    <input type="button" disabled="@(selectedFile == null)" value="file action" />
 </div>
 
-<FilePreview Info="selectedItem"/>
+<FilePreview File="selectedFile"/>
 
 @code {
 
-    private bool onlySecure;
-    private MediaTypes mediaTypes = MediaTypes.Visible;
-    private GalleryViewMode viewMode = GalleryViewMode.LargeIcons;
+    private GalleryViewMode viewMode = GalleryViewMode.DetailList;
 
     private DirectoryInfo currentDir = null!;
     private List<FileSystemInfo> items = new List<FileSystemInfo>();
     private ListView<FileSystemInfo> listControl = null!;
-    private FileSystemInfo? selectedItem;
+    private FileInfo? selectedFile;
 
     private bool CanGoUp => currentDir.Parent != null;
 
@@ -69,15 +61,18 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navigate(new DirectoryInfo("C:\\temp"));
+
+        var specialFolder = Environment.SpecialFolder.MyDocuments;
+        var specialPath = Environment.GetFolderPath(specialFolder);
+        var specialDirInfo = new DirectoryInfo(specialPath);
+        var appMediaFiles = specialDirInfo.CreateSubdirectory("mauzor");
+
+        Navigate(appMediaFiles);
     }
 
     private void ReloadCurrent() => Navigate(currentDir);
 
-    private void OnSelectionChanged(FileSystemInfo? item)
-    {
-        selectedItem = item;
-    }
+    private void OnSelectionChanged(FileSystemInfo? info) => selectedFile = info as FileInfo;
 
     private void Navigate(DirectoryInfo dir)
     {
@@ -87,7 +82,7 @@
 
         var folderOptions = new EnumerationOptions { IgnoreInaccessible = true };
         items.AddRange(dir.GetDirectories("*", folderOptions));
-        items.AddRange(dir.EnumerateMedia(mediaTypes, false).Where(m => (!onlySecure || m.IsSecure())));
+        items.AddRange(dir.EnumerateMedia(recursive: false));
     }
 
     private void ItemDoubleClicked(FileSystemInfo info)

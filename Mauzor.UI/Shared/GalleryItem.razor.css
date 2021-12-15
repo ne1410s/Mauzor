@@ -57,10 +57,6 @@ img {
   width: unset;
 }
 
-.gallery.detail .gallery-item > * {
-  padding: 0 1em;
-}
-
 .gallery.detail .gallery-item > .is-detail {
   flex: 0 0 3em;
 }
