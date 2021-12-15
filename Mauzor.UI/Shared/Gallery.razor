@@ -3,6 +3,7 @@
 @using System.IO
 @using System.Diagnostics
 @using Microsoft.Extensions.Logging
+@using Microsoft.Maui.Essentials
 
 @inject ILogger<Gallery> logger;
 
@@ -17,6 +18,10 @@
 <div>
     <input type="button" title="up" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
     <input type="button" title="refresh" @onclick="ReloadCurrent" value="↻" />
+    <input type="button" title="import" @onclick="ImportFiles" value="↦" />
+
+    <InputFile/>
+
     <span>@currentDir.FullName</span>
 </div>
 
@@ -71,6 +76,15 @@
     }
 
     private void ReloadCurrent() => Navigate(currentDir);
+
+    private async Task ImportFiles()
+    {
+        var pickOptions = new PickOptions();
+        pickOptions.FileTypes = FilePickerFileType.Images;
+        pickOptions.PickerTitle = "hello picker";
+
+        var picker = await FilePicker.PickAsync(pickOptions);
+    }
 
     private void OnSelectionChanged(FileSystemInfo? info) => selectedFile = info as FileInfo;
 

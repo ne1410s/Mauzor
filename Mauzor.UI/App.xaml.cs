@@ -11,6 +11,8 @@ namespace Mauzor.UI
 		{
 			InitializeComponent();
 
+			//?Microsoft.Maui.Essentials.Platform.Init(this);
+
 			MainPage = new MainPage();
 		}
 	}
