@@ -19,9 +19,6 @@
     <input type="button" title="up" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
     <input type="button" title="refresh" @onclick="ReloadCurrent" value="↻" />
     <input type="button" title="import" @onclick="ImportFiles" value="↦" />
-
-    <InputFile/>
-
     <span>@currentDir.FullName</span>
 </div>
 
@@ -79,11 +76,7 @@
 
     private async Task ImportFiles()
     {
-        var pickOptions = new PickOptions();
-        pickOptions.FileTypes = FilePickerFileType.Images;
-        pickOptions.PickerTitle = "hello picker";
-
-        var picker = await FilePicker.PickAsync(pickOptions);
+        var file = await InteropExtensions.PickFile(true);
     }
 
     private void OnSelectionChanged(FileSystemInfo? info) => selectedFile = info as FileInfo;
