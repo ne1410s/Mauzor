@@ -1,4 +1,5 @@
 ﻿@using FullStack.Av.Domain
+@using FullStack.Crypto;
 @using Mauzor.UI.Shared
 @using System.IO
 @using System.Diagnostics
@@ -16,14 +17,14 @@
 </div>
 
 <div>
-    <input type="button" title="up" @onclick="() => Navigate(currentDir.Parent!)" disabled="@(!CanGoUp)" value=".." />
-    <input type="button" title="refresh" @onclick="ReloadCurrent" value="↻" />
+    <input type="button" title="up" @onclick="NavigateUp" disabled="@(!CanNavigateUp)" value=".." />
+    <input type="button" title="refresh" @onclick="() => Navigate(currentDir)" value="↻" />
     <input type="button" title="import" @onclick="ImportFiles" value="↦" />
-    <span>@currentDir.FullName</span>
+    <span>@currentDir.Name</span>
 </div>
 
 <div class="gallery @AuxClasses">
-    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation" SelectionChanged="OnSelectionChanged">
+    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation" SelectionChanged="fsi => selectedFile = fsi as FileInfo">
         <ItemTemplate Context="item">
             <GalleryItem ViewMode="@viewMode" Info="item" OnDoubleClick="ItemDoubleClicked" />
         </ItemTemplate>
@@ -31,7 +32,7 @@
 </div>
 
 <div>
-    <input type="button" disabled="@(selectedFile == null)" value="file action" />
+    <input type="button" title="encrypt" @onclick="EncryptSelection" disabled="@(!CanEncryptSelection)" value="🔒" />
 </div>
 
 <FilePreview File="selectedFile"/>
@@ -44,8 +45,6 @@
     private List<FileSystemInfo> items = new List<FileSystemInfo>();
     private ListView<FileSystemInfo> listControl = null!;
     private FileInfo? selectedFile;
-
-    private bool CanGoUp => currentDir.Parent != null;
 
     private string AuxClasses => viewMode switch
     {
@@ -72,15 +71,6 @@
         Navigate(appMediaFiles);
     }
 
-    private void ReloadCurrent() => Navigate(currentDir);
-
-    private async Task ImportFiles()
-    {
-        var file = await InteropExtensions.PickFile(true);
-    }
-
-    private void OnSelectionChanged(FileSystemInfo? info) => selectedFile = info as FileInfo;
-
     private void Navigate(DirectoryInfo dir)
     {
         currentDir = dir;
@@ -92,15 +82,42 @@
         items.AddRange(dir.EnumerateMedia(recursive: false));
     }
 
+    private async Task ImportFiles()
+    {
+        var files = await InteropExtensions.PickMediaAsync(false);
+        foreach (var file in files)
+        {
+            var fi = new FileInfo(file.FullPath);
+            fi.Encrypt(new byte[] { 1, 33, 1, 44 });
+            fi.MoveTo(Path.Combine(currentDir.FullName, fi.Name));
+        }
+
+        Navigate(currentDir);
+    }
+
+
     private void ItemDoubleClicked(FileSystemInfo info)
     {
         if (info is FileInfo fi)
         {
-            
+
         }
         else if (info is DirectoryInfo di)
         {
             Navigate(di);
         }
+    }
+
+    private bool CanNavigateUp => currentDir.Parent != null;
+    private void NavigateUp()
+    {
+        Navigate(currentDir.Parent!);
+    }
+
+    private bool CanEncryptSelection => selectedFile != null && !selectedFile.IsSecure();
+    private void EncryptSelection()
+    {
+        selectedFile!.Encrypt(new byte[] { 1, 33, 1, 44 });
+        Navigate(currentDir);
     }
 }

@@ -1,7 +1,11 @@
 ﻿@using System.IO
+@using FullStack.Av.Domain;
 
 @if (File != null) {
-    <span>@File.FullName</span>
+    <span>@(File.IsSecure() ? "secure" : "open" )</span>
+    <span>@File.GetMediaType().ToString().ToLower()</span>
+    <span>@File.Extension.TrimStart('.').ToLower()</span>
+    <span>@File.Length.ToFileSize()</span>
 }
 
 @code {
