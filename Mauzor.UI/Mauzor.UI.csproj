@@ -67,7 +67,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FullStack.Av.Sources.Imaging" Version="1.0.0-build.3" />
+    <PackageReference Include="FullStack.Av.Sources" Version="1.0.0-build.8" />
   </ItemGroup>
 
 </Project>

@@ -12,9 +12,9 @@ namespace Mauzor.UI.Shared
         {
 #if WINDOWS
             var filePicker = new Windows.Storage.Pickers.FileOpenPicker();
-            var extensions = isVideo 
-                ? FullStack.Av.Domain.FileExtensions.VideoExtensions
-                : FullStack.Av.Domain.FileExtensions.ImageExtensions;
+            var extensions = isVideo
+                ? FullStack.Av.Media.MediaFormatExtensions.VideoExtensions
+                : FullStack.Av.Media.MediaFormatExtensions.ImageExtensions;
 
             foreach (var extension in extensions)
             {

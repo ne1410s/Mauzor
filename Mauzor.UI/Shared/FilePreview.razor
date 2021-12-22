@@ -1,14 +1,15 @@
 ﻿@using System.IO
-@using FullStack.Av.Domain;
+@using FullStack.Av;
+@using FullStack.Av.Media
 
-@if (File != null) {
-    <span>@(File.IsSecure() ? "secure" : "open" )</span>
-    <span>@File.GetMediaType().ToString().ToLower()</span>
-    <span>@File.Extension.TrimStart('.').ToLower()</span>
-    <span>@File.Length.ToFileSize()</span>
+@if (Source != null) {
+    <span>@(Source.IsSecure ? "secure" : "open" )</span>
+    <span>@Source.MediaType.ToString().ToLower()</span>
+    <span>@Source.FileSource.Extension.TrimStart('.').ToLower()</span>
+    <span>@Source.PrintFileSize</span>
 }
 
 @code {
     [Parameter]
-    public FileInfo? File { get; set; }
+    public AvSource? Source { get; set; }
 }

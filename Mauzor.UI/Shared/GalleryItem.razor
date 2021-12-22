@@ -1,28 +1,32 @@
-﻿@using FullStack.Av.Domain
-@using FullStack.Av.Sources.Imaging
-@using System.IO
+﻿@using System.IO
+@using FullStack.Av.Media
+@using FullStack.Av.Sources
+@using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.Formats.Jpeg
+@using SixLabors.ImageSharp.Processing
 
 <div class="@classes" @ondblclick="() => OnDoubleClick.InvokeAsync(Info)">
     <div class="image" title="@ToolTip">
-        <img alt="file sys icon" src="@imageSource" />
+        <img alt="file sys icon" src="@imageSourceString" />
     </div>
     <span class="name">@Info.Name</span>
-    @if (Info is FileInfo fi) 
+    @if (Info is AvSource fi) 
     {
-        <span class="is-detail type">@fi.Extension.TrimStart('.').ToLower()</span>
-        <span class="is-detail size">@fi.Length.ToFileSize()</span>
+        <span class="is-detail type">@fi.FileSource.Extension.TrimStart('.').ToLower()</span>
+        <span class="is-detail size">@fi.PrintFileSize</span>
     }
 </div>
 
 
 @code {
+
     private string classes = null!;
-    private string imageSource = null!;
-    private FileSystemInfo info = null!;
+    private string imageSourceString = null!;
+    private IAvBrowsingItem info = null!;
     private string? ToolTip => ViewMode switch
     {
         GalleryViewMode.SmallIcons => Info.Name,
-        GalleryViewMode.LargeIcons => (Info as FileInfo)?.Length.ToFileSize(),
+        GalleryViewMode.LargeIcons => (Info as AvSource)?.PrintFileSize,
         _ => null,
     };
 
@@ -30,7 +34,7 @@
     public GalleryViewMode ViewMode { get; set; }
 
     [Parameter]
-    public FileSystemInfo Info
+    public IAvBrowsingItem Info
     {
         get => info;
         set
@@ -39,25 +43,22 @@
             {
                 info = value;
                 var classBuilder = new System.Text.StringBuilder("gallery-item");
-                if (info is FileInfo file)
+                if (info.IsDirectory)
+                {
+                    classBuilder.Append(" folder");
+                    imageSourceString = "images/folder.svg";
+                }
+                else
                 {
                     classBuilder.Append(" file");
-                    if (file.IsSecure())
+                    var source = (AvSource)info;
+                    if (source.IsSecure)
                     {
                         classBuilder.Append(" secure");
                     }
 
-                    imageSource = file.GetMediaType() switch
-                    {
-                        MediaTypes.Image => file.TransformBase64(testKey, 190) ?? "images/image.svg",
-                        MediaTypes.Video => "images/video.svg",
-                        _ => "images/document.svg"
-                    };
-                }
-                else if (info is DirectoryInfo di)
-                {
-                    classBuilder.Append(" folder");
-                    imageSource = "images/folder.svg";
+                    var thumbnail = source.Preview(testKey);
+                    imageSourceString = thumbnail?.ToBase64String(JpegFormat.Instance) ?? "images/document.svg";
                 }
 
                 classes = classBuilder.ToString();
@@ -66,7 +67,7 @@
     }
 
     [Parameter]
-    public EventCallback<FileSystemInfo> OnDoubleClick { get; set; }
+    public EventCallback<IAvBrowsingItem> OnDoubleClick { get; set; }
 
     private byte[] testKey = new byte[] { 1, 33, 1, 44 };
 }

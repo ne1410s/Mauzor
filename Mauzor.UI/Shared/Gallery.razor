@@ -1,4 +1,4 @@
-﻿@using FullStack.Av.Domain
+﻿@using FullStack.Av.Media;
 @using FullStack.Crypto;
 @using Mauzor.UI.Shared
 @using System.IO
@@ -24,7 +24,7 @@
 </div>
 
 <div class="gallery @AuxClasses">
-    <ListView @ref="listControl" T="FileSystemInfo" Items="items" Orientation="orientation" SelectionChanged="fsi => selectedFile = fsi as FileInfo">
+    <ListView @ref="listControl" T="IAvBrowsingItem" Items="items" Orientation="orientation" SelectionChanged="fsi => selectedFile = fsi as AvSource">
         <ItemTemplate Context="item">
             <GalleryItem ViewMode="@viewMode" Info="item" OnDoubleClick="ItemDoubleClicked" />
         </ItemTemplate>
@@ -35,16 +35,16 @@
     <input type="button" title="encrypt" @onclick="EncryptSelection" disabled="@(!CanEncryptSelection)" value="🔒" />
 </div>
 
-<FilePreview File="selectedFile"/>
+<FilePreview Source="selectedFile"/>
 
 @code {
 
     private GalleryViewMode viewMode = GalleryViewMode.DetailList;
 
-    private DirectoryInfo currentDir = null!;
-    private List<FileSystemInfo> items = new List<FileSystemInfo>();
-    private ListView<FileSystemInfo> listControl = null!;
-    private FileInfo? selectedFile;
+    private AvDirectory currentDir = null!;
+    private List<IAvBrowsingItem> items = new List<IAvBrowsingItem>();
+    private ListView<IAvBrowsingItem> listControl = null!;
+    private AvSource? selectedFile;
 
     private string AuxClasses => viewMode switch
     {
@@ -68,56 +68,53 @@
         var specialDirInfo = new DirectoryInfo(specialPath);
         var appMediaFiles = specialDirInfo.CreateSubdirectory("mauzor");
 
-        Navigate(appMediaFiles);
+        Navigate(new AvDirectory(appMediaFiles));
     }
 
-    private void Navigate(DirectoryInfo dir)
+    private void Navigate(AvDirectory dir)
     {
         currentDir = dir;
         listControl?.ClearSelection();
         items.Clear();
-
-        var folderOptions = new EnumerationOptions { IgnoreInaccessible = true };
-        items.AddRange(dir.GetDirectories("*", folderOptions));
-        items.AddRange(dir.EnumerateMedia(recursive: false));
+        items.AddRange(dir.FolderSource.Browse());
     }
 
     private async Task ImportFiles()
     {
-        var files = await InteropExtensions.PickMediaAsync(false);
+        var files = await InteropExtensions.PickMediaAsync(true);
         foreach (var file in files)
         {
             var fi = new FileInfo(file.FullPath);
             fi.Encrypt(new byte[] { 1, 33, 1, 44 });
-            fi.MoveTo(Path.Combine(currentDir.FullName, fi.Name));
+            fi.MoveTo(Path.Combine(currentDir.FolderSource.FullName, fi.Name));
         }
 
         Navigate(currentDir);
     }
 
 
-    private void ItemDoubleClicked(FileSystemInfo info)
+    private void ItemDoubleClicked(IAvBrowsingItem info)
     {
-        if (info is FileInfo fi)
+        if (info is AvSource fi)
         {
 
         }
-        else if (info is DirectoryInfo di)
+        else if (info is AvDirectory di)
         {
             Navigate(di);
         }
     }
 
-    private bool CanNavigateUp => currentDir.Parent != null;
+    private bool CanNavigateUp => currentDir.FolderSource.Parent != null;
     private void NavigateUp()
     {
-        Navigate(currentDir.Parent!);
+        Navigate(new AvDirectory(currentDir.FolderSource.Parent!));
     }
 
-    private bool CanEncryptSelection => selectedFile != null && !selectedFile.IsSecure();
+    private bool CanEncryptSelection => selectedFile != null && !selectedFile.IsSecure;
     private void EncryptSelection()
     {
-        selectedFile!.Encrypt(new byte[] { 1, 33, 1, 44 });
+        selectedFile!.FileSource.Encrypt(new byte[] { 1, 33, 1, 44 });
         Navigate(currentDir);
     }
 }
